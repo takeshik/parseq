@@ -598,15 +598,15 @@ namespace Parseq.Combinators
             return stream =>
             {
                 IReply<TToken, TResult> reply;
-                TResult result; ErrorMessage message;
-                switch ((reply = parser0(stream)).TryGetValue(out result, out message))
+                TResult result; ErrorMessage error;
+                switch ((reply = parser0(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
                         return parser1(reply.Stream);
                     case ReplyStatus.Failure:
                         return Reply.Failure<TToken, TResult>(stream);
                     default:
-                        return Reply.Error<TToken, TResult>(stream, message);
+                        return Reply.Error<TToken, TResult>(stream, error);
                 }
             };
         }
@@ -622,15 +622,15 @@ namespace Parseq.Combinators
             return stream =>
             {
                 IReply<TToken, TResult> reply;
-                TResult result; ErrorMessage message;
-                switch ((reply = parser0(stream)).TryGetValue(out result, out message))
+                TResult result; ErrorMessage error;
+                switch ((reply = parser0(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
                         return Reply.Success<TToken, TResult>(reply.Stream, result);
                     case ReplyStatus.Failure:
                         return parser1(stream);
                     default:
-                        return Reply.Error<TToken, TResult>(stream, message);
+                        return Reply.Error<TToken, TResult>(stream, error);
                 }
             };
         }
@@ -646,8 +646,8 @@ namespace Parseq.Combinators
             return stream =>
             {
                 IReply<TToken, TResult> reply;
-                TResult result; ErrorMessage message;
-                switch ((reply = parser0(stream)).TryGetValue(out result, out message))
+                TResult result; ErrorMessage error;
+                switch ((reply = parser0(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
                         return Reply.Success<TToken, TResult>(reply.Stream, result);

@@ -38,8 +38,8 @@ namespace Parseq.Combinators
             return stream =>
             {
                 IReply<TToken, TResult> reply;
-                TResult result; ErrorMessage message;
-                switch ((reply = parser(stream)).TryGetValue(out result, out message))
+                TResult result; ErrorMessage error;
+                switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
                         return Reply.Success<TToken, TResult>(reply.Stream, result);
@@ -56,15 +56,15 @@ namespace Parseq.Combinators
             return stream =>
             {
                 IReply<TToken, TResult> reply;
-                TResult result; ErrorMessage message;
-                switch ((reply = parser(stream)).TryGetValue(out result, out message))
+                TResult result; ErrorMessage error;
+                switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success: return Reply.Success<TToken, TResult>(reply.Stream, result);
                     case ReplyStatus.Failure: return Reply.Failure<TToken, TResult>(stream);
                     default:
-                        return (flags.HasFlag(message.MessageType))
+                        return (flags.HasFlag(error.MessageType))
                             ? Reply.Failure<TToken, TResult>(stream)
-                            : Reply.Error<TToken, TResult>(stream, message);
+                            : Reply.Error<TToken, TResult>(stream, error);
                 }
             };
         }

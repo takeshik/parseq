@@ -52,13 +52,13 @@ namespace Parseq
 
         public static Boolean TryGetValue<TToken, TResult>(this IReply<TToken, TResult> self, out TResult result)
         {
-            ErrorMessage message;
-            switch (self.TryGetValue(out result, out message))
+            ErrorMessage error;
+            switch (self.TryGetValue(out result, out error))
             {
                 case ReplyStatus.Success: return true;
                 case ReplyStatus.Failure: return false;
                 default:
-                    throw message;
+                    throw error;
             }
         }
 
@@ -67,8 +67,8 @@ namespace Parseq
             if (reply == null)
                 throw new ArgumentNullException("reply");
 
-            TResult result; ErrorMessage message;
-            return ReplyStatus.Success == reply.TryGetValue(out result, out message);
+            TResult result; ErrorMessage error;
+            return ReplyStatus.Success == reply.TryGetValue(out result, out error);
         }
 
         public static Boolean IsFailure<TToken, TResult>(this IReply<TToken, TResult> reply)
@@ -76,8 +76,8 @@ namespace Parseq
             if (reply == null)
                 throw new ArgumentNullException("reply");
 
-            TResult result; ErrorMessage message;
-            return ReplyStatus.Failure == reply.TryGetValue(out result, out message);
+            TResult result; ErrorMessage error;
+            return ReplyStatus.Failure == reply.TryGetValue(out result, out error);
         }
 
         public static Boolean IsError<TToken, TResult>(this IReply<TToken, TResult> reply)
@@ -85,8 +85,8 @@ namespace Parseq
             if (reply == null)
                 throw new ArgumentNullException("reply");
 
-            TResult result; ErrorMessage message;
-            return ReplyStatus.Error == reply.TryGetValue(out result, out message);
+            TResult result; ErrorMessage error;
+            return ReplyStatus.Error == reply.TryGetValue(out result, out error);
         }
 
         public static IReply<TToken, T> Where<TToken, T>(this IReply<TToken, T> reply,
@@ -97,15 +97,15 @@ namespace Parseq
             if (predicate == null)
                 throw new ArgumentNullException("predicate");
 
-            IOption<T> result; T value; ErrorMessage message;
-            switch (reply.TryGetValue(out result, out message))
+            IOption<T> result; T value; ErrorMessage error;
+            switch (reply.TryGetValue(out result, out error))
             {
                 case Hand.Left:
                     return result.TryGetValue(out value) && predicate(value) ?
                         Reply.Success<TToken, T>(reply.Stream, value) :
                         Reply.Failure<TToken, T>(reply.Stream);
                 default:
-                    return Reply.Error<TToken, T>(reply.Stream, message);
+                    return Reply.Error<TToken, T>(reply.Stream, error);
             }
         }
 
@@ -117,15 +117,15 @@ namespace Parseq
             if (selector == null)
                 throw new ArgumentNullException("selector");
 
-            T result; ErrorMessage message;
-            switch (reply.TryGetValue(out result, out message))
+            T result; ErrorMessage error;
+            switch (reply.TryGetValue(out result, out error))
             {
                 case ReplyStatus.Success:
                     return Reply.Success<TToken, U>(reply.Stream, selector(result));
                 case ReplyStatus.Failure:
                     return Reply.Failure<TToken, U>(reply.Stream);
                 default:
-                    return Reply.Error<TToken, U>(reply.Stream, message);
+                    return Reply.Error<TToken, U>(reply.Stream, error);
             }
         }
 
@@ -137,15 +137,15 @@ namespace Parseq
             if (selector == null)
                 throw new ArgumentNullException("selector");
 
-            T result; ErrorMessage message;
-            switch (reply.TryGetValue(out result, out message))
+            T result; ErrorMessage error;
+            switch (reply.TryGetValue(out result, out error))
             {
                 case ReplyStatus.Success:
                     return selector(result);
                 case ReplyStatus.Failure:
                     return Reply.Failure<TToken, U>(reply.Stream);
                 default:
-                    return Reply.Error<TToken, U>(reply.Stream, message);
+                    return Reply.Error<TToken, U>(reply.Stream, error);
             }
         }
 

@@ -143,15 +143,15 @@ namespace Parseq
             private readonly IStream<TToken> _stream;
             private readonly ErrorMessage _message;
 
-            public Error(IStream<TToken> stream, ErrorMessage message)
+            public Error(IStream<TToken> stream, ErrorMessage error)
             {
                 if (stream == null)
                     throw new ArgumentNullException("stream");
-                if (message == null)
+                if (error == null)
                     throw new ArgumentNullException("message");
 
                 _stream = stream;
-                _message = message;
+                _message = error;
             }
 
             public override IStream<TToken> Stream
@@ -194,13 +194,13 @@ namespace Parseq
     {
         public virtual Boolean TryGetValue(out TResult result)
         {
-            ErrorMessage message;
-            switch (this.TryGetValue(out result, out message))
+            ErrorMessage error;
+            switch (this.TryGetValue(out result, out error))
             {
                 case ReplyStatus.Success: return true;
                 case ReplyStatus.Failure: return false;
                 default:
-                    throw message;
+                    throw error;
             }
         }
     }
@@ -217,9 +217,9 @@ namespace Parseq
             return new Reply<TToken, TResult>.Failure(stream);
         }
 
-        public static IReply<TToken, TResult> Error<TToken, TResult>(IStream<TToken> stream, ErrorMessage message)
+        public static IReply<TToken, TResult> Error<TToken, TResult>(IStream<TToken> stream, ErrorMessage error)
         {
-            return new Reply<TToken, TResult>.Error(stream, message);
+            return new Reply<TToken, TResult>.Error(stream, error);
         }
     }
 }

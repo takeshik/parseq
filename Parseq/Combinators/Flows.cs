@@ -62,8 +62,8 @@ namespace Parseq.Combinators
             return stream =>
             {
                 IReply<TToken, TResult> reply;
-                TResult result; ErrorMessage message;
-                switch ((reply = parser(stream)).TryGetValue(out result, out message))
+                TResult result; ErrorMessage error;
+                switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
                         action(result);
@@ -71,7 +71,7 @@ namespace Parseq.Combinators
                     case ReplyStatus.Failure:
                         return Reply.Failure<TToken, TResult>(stream);
                     default:
-                        return Reply.Error<TToken, TResult>(stream, message);
+                        return Reply.Error<TToken, TResult>(stream, error);
                 }
             };
         }
@@ -87,8 +87,8 @@ namespace Parseq.Combinators
             return stream =>
             {
                 IReply<TToken, TResult> reply;
-                TResult result; ErrorMessage message;
-                switch ((reply = parser(stream)).TryGetValue(out result, out message))
+                TResult result; ErrorMessage error;
+                switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
                         return Reply.Success<TToken, TResult>(reply.Stream, result);
@@ -96,7 +96,7 @@ namespace Parseq.Combinators
                         action();
                         return Reply.Failure<TToken, TResult>(stream);
                     default:
-                        return Reply.Error<TToken, TResult>(stream, message);
+                        return Reply.Error<TToken, TResult>(stream, error);
                 }
             };
         }
@@ -112,16 +112,16 @@ namespace Parseq.Combinators
             return stream =>
             {
                 IReply<TToken, TResult> reply;
-                TResult result; ErrorMessage message;
-                switch ((reply = parser(stream)).TryGetValue(out result, out message))
+                TResult result; ErrorMessage error;
+                switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
                         return Reply.Success<TToken, TResult>(reply.Stream, result);
                     case ReplyStatus.Failure:
                         return Reply.Failure<TToken, TResult>(stream);
                     default:
-                        action(message);
-                        return Reply.Error<TToken, TResult>(stream, message);
+                        action(error);
+                        return Reply.Error<TToken, TResult>(stream, error);
                 }
             };
         }
@@ -154,8 +154,8 @@ namespace Parseq.Combinators
                 throw new ArgumentNullException("elseParser");
 
             return Flows.If<TToken, TCond, IEither<TResult0, TResult1>>(condition,
-                thenParser.Select(_ => Either.Left<TResult0, TResult1>(_)),
-                elseParser.Select(_ => Either.Right<TResult0, TResult1>(_)));
+                thenParser.Select(Either.Left<TResult0, TResult1>),
+                elseParser.Select(Either.Right<TResult0, TResult1>));
         }
 
         public static Parser<TToken, TResult> Unless<TToken, TCond, TResult>(
@@ -186,8 +186,8 @@ namespace Parseq.Combinators
                 throw new ArgumentNullException("elseParser");
 
             return Flows.Unless<TToken, TCond, IEither<TResult0, TResult1>>(condition,
-                thenParser.Select(_ => Either.Left<TResult0, TResult1>(_)),
-                elseParser.Select(_ => Either.Right<TResult0, TResult1>(_)));
+                thenParser.Select(Either.Left<TResult0, TResult1>),
+                elseParser.Select(Either.Right<TResult0, TResult1>));
         }
     }
 }
