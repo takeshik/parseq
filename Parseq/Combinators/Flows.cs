@@ -67,11 +67,11 @@ namespace Parseq.Combinators
                 {
                     case ReplyStatus.Success:
                         action(result);
-                        return Reply.Success<TToken, TResult>(reply.Stream, result);
+                        return Reply.Success<TToken, TResult>(reply.Stream, result, reply.Messages);
                     case ReplyStatus.Failure:
-                        return Reply.Failure<TToken, TResult>(stream);
+                        return Reply.Failure<TToken, TResult>(stream, reply.Messages);
                     default:
-                        return Reply.Error<TToken, TResult>(stream, error);
+                        return Reply.Error<TToken, TResult>(stream, error, reply.Messages);
                 }
             };
         }
@@ -91,12 +91,12 @@ namespace Parseq.Combinators
                 switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
-                        return Reply.Success<TToken, TResult>(reply.Stream, result);
+                        return Reply.Success<TToken, TResult>(reply.Stream, result, reply.Messages);
                     case ReplyStatus.Failure:
                         action();
-                        return Reply.Failure<TToken, TResult>(stream);
+                        return Reply.Failure<TToken, TResult>(stream, reply.Messages);
                     default:
-                        return Reply.Error<TToken, TResult>(stream, error);
+                        return Reply.Error<TToken, TResult>(stream, error, reply.Messages);
                 }
             };
         }
@@ -116,12 +116,12 @@ namespace Parseq.Combinators
                 switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
-                        return Reply.Success<TToken, TResult>(reply.Stream, result);
+                        return Reply.Success<TToken, TResult>(reply.Stream, result, reply.Messages);
                     case ReplyStatus.Failure:
-                        return Reply.Failure<TToken, TResult>(stream);
+                        return Reply.Failure<TToken, TResult>(stream, reply.Messages);
                     default:
                         action(error);
-                        return Reply.Error<TToken, TResult>(stream, error);
+                        return Reply.Error<TToken, TResult>(stream, error, reply.Messages);
                 }
             };
         }

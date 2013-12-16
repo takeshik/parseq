@@ -67,9 +67,9 @@ namespace Parseq
                 IReply<TToken, T> reply; T result; ErrorMessage error;
                 switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
-                    case ReplyStatus.Success: return Reply.Success<TToken, U>(reply.Stream, selector(result));
-                    case ReplyStatus.Failure: return Reply.Failure<TToken, U>(stream);
-                    default: return Reply.Error<TToken, U>(stream, error);
+                    case ReplyStatus.Success: return Reply.Success<TToken, U>(reply.Stream, selector(result), reply.Messages);
+                    case ReplyStatus.Failure: return Reply.Failure<TToken, U>(stream, reply.Messages);
+                    default: return Reply.Error<TToken, U>(stream, error, reply.Messages);
                 }
             };
         }
@@ -88,9 +88,9 @@ namespace Parseq
                 IReply<TToken, T> reply; T result; ErrorMessage error;
                 switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
-                    case ReplyStatus.Success: return selector(result)(reply.Stream);
-                    case ReplyStatus.Failure: return Reply.Failure<TToken, U>(stream);
-                    default: return Reply.Error<TToken, U>(stream, error);
+                    case ReplyStatus.Success: return selector(result).Message(reply.Messages)(reply.Stream);
+                    case ReplyStatus.Failure: return Reply.Failure<TToken, U>(stream, reply.Messages);
+                    default: return Reply.Error<TToken, U>(stream, error, reply.Messages);
                 }
             };
         }
@@ -108,6 +108,43 @@ namespace Parseq
                 throw new ArgumentNullException("projector");
 
             return parser.SelectMany(x => selector(x).Select(y => projector(x, y)));
+        }
+
+        public static Parser<TToken, TResult> Message<TToken, TResult>(
+            this Parser<TToken, TResult> parser,
+            IEnumerable<ErrorMessage> messages)
+        {
+            if (parser == null)
+                throw new ArgumentNullException("parser");
+            if (messages == null)
+                throw new ArgumentNullException("messages");
+
+
+            return stream =>
+            {
+                IReply<TToken, TResult> reply; TResult result; ErrorMessage error;
+                switch ((reply = parser(stream)).TryGetValue(out result, out error))
+                {
+                    case ReplyStatus.Success: return Reply.Success<TToken, TResult>(reply.Stream, result, reply.Messages.Concat(messages));
+                    case ReplyStatus.Failure: return Reply.Failure<TToken, TResult>(stream, reply.Messages.Concat(messages));
+                    default: return Reply.Error<TToken, TResult>(stream, error, reply.Messages.Concat(messages));
+                }
+            };
+        }
+
+        public static Parser<TToken, TResult> Message<TToken, TResult>(
+            this Parser<TToken, TResult> parser,
+            String message)
+        {
+            if (parser == null)
+                throw new ArgumentNullException("parser");
+            if (message == null)
+                throw new ArgumentNullException("message");
+
+            return stream => parser.Message(new[]
+            {
+                new ErrorMessage(ErrorMessageType.Message, message, stream.Position, stream.Position),
+            })(stream);
         }
     }
 }

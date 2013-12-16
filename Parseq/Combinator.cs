@@ -96,9 +96,9 @@ namespace Parseq
                 switch ((reply = parser0(stream)).TryGetValue(out result, out error))
                 {
                     case ReplyStatus.Success:
-                        return Reply.Success<TToken, TResult>(reply.Stream, result);
+                        return Reply.Success<TToken, TResult>(reply.Stream, result, reply.Messages);
                     case ReplyStatus.Error:
-                        return Reply.Error<TToken, TResult>(stream, error);
+                        return Reply.Error<TToken, TResult>(stream, error, reply.Messages);
                     default:
                         return parser1(stream);
                 }
@@ -117,10 +117,10 @@ namespace Parseq
                 TResult result; ErrorMessage error;
                 switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
-                    case ReplyStatus.Success: return Reply.Success<TToken, TResult>(stream, result);
-                    case ReplyStatus.Failure: return Reply.Failure<TToken, TResult>(stream);
+                    case ReplyStatus.Success: return Reply.Success<TToken, TResult>(stream, result, reply.Messages);
+                    case ReplyStatus.Failure: return Reply.Failure<TToken, TResult>(stream, reply.Messages);
                     default:
-                        return Reply.Error<TToken, TResult>(stream, error);
+                        return Reply.Error<TToken, TResult>(stream, error, reply.Messages);
                 }
             };
         }
@@ -137,10 +137,10 @@ namespace Parseq
                 TResult result; ErrorMessage error;
                 switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
-                    case ReplyStatus.Success: return Reply.Failure<TToken, Unit>(stream);
-                    case ReplyStatus.Failure: return Reply.Success<TToken, Unit>(stream, Unit.Instance);
+                    case ReplyStatus.Success: return Reply.Failure<TToken, Unit>(stream, reply.Messages);
+                    case ReplyStatus.Failure: return Reply.Success<TToken, Unit>(stream, Unit.Instance, reply.Messages);
                     default:
-                        return Reply.Error<TToken, Unit>(stream, error);
+                        return Reply.Error<TToken, Unit>(stream, error, reply.Messages);
                 }
             };
         }
@@ -237,10 +237,10 @@ namespace Parseq
                 TResult result; ErrorMessage error;
                 switch ((reply = parser(stream)).TryGetValue(out result, out error))
                 {
-                    case ReplyStatus.Success: return Reply.Success<TToken, IOption<TResult>>(reply.Stream, Option.Just(result));
-                    case ReplyStatus.Failure: return Reply.Success<TToken, IOption<TResult>>(stream, Option.None<TResult>());
+                    case ReplyStatus.Success: return Reply.Success<TToken, IOption<TResult>>(reply.Stream, Option.Just(result), reply.Messages);
+                    case ReplyStatus.Failure: return Reply.Success<TToken, IOption<TResult>>(stream, Option.None<TResult>(), reply.Messages);
                     default:
-                        return Reply.Error<TToken, IOption<TResult>>(stream, error);
+                        return Reply.Error<TToken, IOption<TResult>>(stream, error, reply.Messages);
                 }
             };
         }

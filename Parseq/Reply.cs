@@ -61,14 +61,14 @@ namespace Parseq
             private readonly TResult _value;
             private readonly ReadOnlyCollection<ErrorMessage> _messages;
 
-            public Success(IStream<TToken> stream, TResult value, IList<ErrorMessage> messages = null)
+            public Success(IStream<TToken> stream, TResult value, IEnumerable<ErrorMessage> messages = null)
             {
                 if (stream == null)
                     throw new ArgumentNullException("stream");
 
                 _stream = stream;
                 _value = value;
-                _messages = new ReadOnlyCollection<ErrorMessage>(messages ?? new ErrorMessage[0]);
+                _messages = new ReadOnlyCollection<ErrorMessage>((messages ?? Enumerable.Empty<ErrorMessage>()).ToArray());
             }
 
             public override IStream<TToken> Stream
@@ -111,13 +111,13 @@ namespace Parseq
             private readonly IStream<TToken> _stream;
             private readonly ReadOnlyCollection<ErrorMessage> _messages;
 
-            public Failure(IStream<TToken> stream, IList<ErrorMessage> messages = null)
+            public Failure(IStream<TToken> stream, IEnumerable<ErrorMessage> messages = null)
             {
                 if (stream == null)
                     throw new ArgumentNullException("stream");
 
                 _stream = stream;
-                _messages = new ReadOnlyCollection<ErrorMessage>(messages ?? new ErrorMessage[0]);
+                _messages = new ReadOnlyCollection<ErrorMessage>((messages ?? Enumerable.Empty<ErrorMessage>()).ToArray());
             }
 
             public override IStream<TToken> Stream
@@ -161,7 +161,7 @@ namespace Parseq
             private readonly ErrorMessage _error;
             private readonly ReadOnlyCollection<ErrorMessage> _messages;
 
-            public Error(IStream<TToken> stream, ErrorMessage error, IList<ErrorMessage> messages = null)
+            public Error(IStream<TToken> stream, ErrorMessage error, IEnumerable<ErrorMessage> messages = null)
             {
                 if (stream == null)
                     throw new ArgumentNullException("stream");
@@ -170,7 +170,7 @@ namespace Parseq
 
                 _stream = stream;
                 _error = error;
-                _messages = new ReadOnlyCollection<ErrorMessage>(messages ?? new ErrorMessage[0]);
+                _messages = new ReadOnlyCollection<ErrorMessage>((messages ?? Enumerable.Empty<ErrorMessage>()).ToArray());
             }
 
             public override IStream<TToken> Stream
@@ -231,17 +231,17 @@ namespace Parseq
 
     public static class Reply
     {
-        public static IReply<TToken, TResult> Success<TToken, TResult>(IStream<TToken> stream, TResult value, IList<ErrorMessage> messages = null)
+        public static IReply<TToken, TResult> Success<TToken, TResult>(IStream<TToken> stream, TResult value, IEnumerable<ErrorMessage> messages = null)
         {
             return new Reply<TToken, TResult>.Success(stream, value, messages);
         }
 
-        public static IReply<TToken, TResult> Failure<TToken, TResult>(IStream<TToken> stream, IList<ErrorMessage> messages = null)
+        public static IReply<TToken, TResult> Failure<TToken, TResult>(IStream<TToken> stream, IEnumerable<ErrorMessage> messages = null)
         {
             return new Reply<TToken, TResult>.Failure(stream, messages);
         }
 
-        public static IReply<TToken, TResult> Error<TToken, TResult>(IStream<TToken> stream, ErrorMessage error, IList<ErrorMessage> messages = null)
+        public static IReply<TToken, TResult> Error<TToken, TResult>(IStream<TToken> stream, ErrorMessage error, IEnumerable<ErrorMessage> messages = null)
         {
             return new Reply<TToken, TResult>.Error(stream, error, messages);
         }

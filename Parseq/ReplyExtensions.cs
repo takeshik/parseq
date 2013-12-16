@@ -102,10 +102,10 @@ namespace Parseq
             {
                 case Hand.Left:
                     return result.TryGetValue(out value) && predicate(value) ?
-                        Reply.Success<TToken, T>(reply.Stream, value) :
-                        Reply.Failure<TToken, T>(reply.Stream);
+                        Reply.Success<TToken, T>(reply.Stream, value, reply.Messages) :
+                        Reply.Failure<TToken, T>(reply.Stream, reply.Messages);
                 default:
-                    return Reply.Error<TToken, T>(reply.Stream, error);
+                    return Reply.Error<TToken, T>(reply.Stream, error, reply.Messages);
             }
         }
 
@@ -121,11 +121,11 @@ namespace Parseq
             switch (reply.TryGetValue(out result, out error))
             {
                 case ReplyStatus.Success:
-                    return Reply.Success<TToken, U>(reply.Stream, selector(result));
+                    return Reply.Success<TToken, U>(reply.Stream, selector(result), reply.Messages);
                 case ReplyStatus.Failure:
-                    return Reply.Failure<TToken, U>(reply.Stream);
+                    return Reply.Failure<TToken, U>(reply.Stream, reply.Messages);
                 default:
-                    return Reply.Error<TToken, U>(reply.Stream, error);
+                    return Reply.Error<TToken, U>(reply.Stream, error, reply.Messages);
             }
         }
 
@@ -141,11 +141,11 @@ namespace Parseq
             switch (reply.TryGetValue(out result, out error))
             {
                 case ReplyStatus.Success:
-                    return selector(result);
+                    return selector(result).Message(reply.Messages);
                 case ReplyStatus.Failure:
-                    return Reply.Failure<TToken, U>(reply.Stream);
+                    return Reply.Failure<TToken, U>(reply.Stream, reply.Messages);
                 default:
-                    return Reply.Error<TToken, U>(reply.Stream, error);
+                    return Reply.Error<TToken, U>(reply.Stream, error, reply.Messages);
             }
         }
 
@@ -161,5 +161,43 @@ namespace Parseq
 
             return reply.SelectMany(x => selector(x).Select(y => projector(x, y)));
         }
+
+        public static IReply<TToken, TResult> Message<TToken, TResult>(
+            this IReply<TToken, TResult> reply,
+            IEnumerable<ErrorMessage> messages)
+        {
+            if (reply == null)
+                throw new ArgumentNullException("reply");
+            if (messages == null)
+                throw new ArgumentNullException("messages");
+
+            switch (reply.Status)
+            {
+                case ReplyStatus.Success:
+                    return Reply.Success<TToken, TResult>(reply.Stream, reply.Left.Value.Value, reply.Messages.Concat(messages));
+                case ReplyStatus.Failure:
+                    return Reply.Failure<TToken, TResult>(reply.Stream, reply.Messages.Concat(messages));
+                case ReplyStatus.Error:
+                    return Reply.Error<TToken, TResult>(reply.Stream, reply.Right.Value, reply.Messages.Concat(messages));
+                default:
+                    throw new ArgumentOutOfRangeException("reply");
+            }
+        }
+
+        public static IReply<TToken, TResult> Message<TToken, TResult>(
+            this IReply<TToken, TResult> reply,
+            String message)
+        {
+            if (reply == null)
+                throw new ArgumentNullException("reply");
+            if (message == null)
+                throw new ArgumentNullException("message");
+
+            return reply.Message(new[]
+            {
+                new ErrorMessage(ErrorMessageType.Message, message, new Position(), new Position()),
+            });
+        }
+
     }
 }
