@@ -22,6 +22,7 @@
  * 
  */
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -39,6 +40,7 @@ namespace Parseq
     {
         IStream<TToken> Stream { get; }
         ReplyStatus Status { get; }
+        ReadOnlyCollection<ErrorMessage> Messages { get; }
     }
 
     public abstract partial class Reply<TToken, TResult>
@@ -47,6 +49,7 @@ namespace Parseq
     {
         public abstract IStream<TToken> Stream { get; }
         public abstract ReplyStatus Status { get; }
+        public abstract ReadOnlyCollection<ErrorMessage> Messages { get; }
         public abstract ReplyStatus TryGetValue(out TResult result, out ErrorMessage error);
     }
 
@@ -56,14 +59,16 @@ namespace Parseq
         {
             private readonly IStream<TToken> _stream;
             private readonly TResult _value;
+            private readonly ReadOnlyCollection<ErrorMessage> _messages;
 
-            public Success(IStream<TToken> stream, TResult value)
+            public Success(IStream<TToken> stream, TResult value, IList<ErrorMessage> messages = null)
             {
                 if (stream == null)
                     throw new ArgumentNullException("stream");
 
                 _stream = stream;
                 _value = value;
+                _messages = new ReadOnlyCollection<ErrorMessage>(messages ?? new ErrorMessage[0]);
             }
 
             public override IStream<TToken> Stream
@@ -79,6 +84,11 @@ namespace Parseq
             public override Hand Hand
             {
                 get { return Hand.Left; }
+            }
+
+            public override ReadOnlyCollection<ErrorMessage> Messages
+            {
+                get { return _messages; }
             }
 
             public override Hand TryGetValue(out IOption<TResult> left, out ErrorMessage right)
@@ -99,13 +109,15 @@ namespace Parseq
         public sealed class Failure : Reply<TToken, TResult>
         {
             private readonly IStream<TToken> _stream;
+            private readonly ReadOnlyCollection<ErrorMessage> _messages;
 
-            public Failure(IStream<TToken> stream)
+            public Failure(IStream<TToken> stream, IList<ErrorMessage> messages = null)
             {
                 if (stream == null)
                     throw new ArgumentNullException("stream");
 
                 _stream = stream;
+                _messages = new ReadOnlyCollection<ErrorMessage>(messages ?? new ErrorMessage[0]);
             }
 
             public override IStream<TToken> Stream
@@ -121,6 +133,11 @@ namespace Parseq
             public override Hand Hand
             {
                 get { return Hand.Left; }
+            }
+
+            public override ReadOnlyCollection<ErrorMessage> Messages
+            {
+                get { return _messages; }
             }
 
             public override Hand TryGetValue(out IOption<TResult> left, out ErrorMessage right)
@@ -141,17 +158,19 @@ namespace Parseq
         public sealed class Error : Reply<TToken, TResult>
         {
             private readonly IStream<TToken> _stream;
-            private readonly ErrorMessage _message;
+            private readonly ErrorMessage _error;
+            private readonly ReadOnlyCollection<ErrorMessage> _messages;
 
-            public Error(IStream<TToken> stream, ErrorMessage error)
+            public Error(IStream<TToken> stream, ErrorMessage error, IList<ErrorMessage> messages = null)
             {
                 if (stream == null)
                     throw new ArgumentNullException("stream");
                 if (error == null)
-                    throw new ArgumentNullException("message");
+                    throw new ArgumentNullException("error");
 
                 _stream = stream;
-                _message = error;
+                _error = error;
+                _messages = new ReadOnlyCollection<ErrorMessage>(messages ?? new ErrorMessage[0]);
             }
 
             public override IStream<TToken> Stream
@@ -169,23 +188,28 @@ namespace Parseq
                 get { return Hand.Right; }
             }
 
+            public override ReadOnlyCollection<ErrorMessage> Messages
+            {
+                get { return _messages; }
+            }
+
             public override Hand TryGetValue(out IOption<TResult> left, out ErrorMessage right)
             {
                 left = Option.Just(default(TResult));
-                right = _message;
+                right = _error;
                 return Hand.Right;
             }
 
             public override ReplyStatus TryGetValue(out TResult result, out ErrorMessage error)
             {
                 result = default(TResult);
-                error = _message;
+                error = _error;
                 return ReplyStatus.Error;
             }
 
             public override Boolean TryGetValue(out TResult result)
             {
-                throw _message;
+                throw _error;
             }
         }
     }
@@ -207,19 +231,19 @@ namespace Parseq
 
     public static class Reply
     {
-        public static IReply<TToken, TResult> Success<TToken, TResult>(IStream<TToken> stream, TResult value)
+        public static IReply<TToken, TResult> Success<TToken, TResult>(IStream<TToken> stream, TResult value, IList<ErrorMessage> messages = null)
         {
-            return new Reply<TToken, TResult>.Success(stream, value);
+            return new Reply<TToken, TResult>.Success(stream, value, messages);
         }
 
-        public static IReply<TToken, TResult> Failure<TToken, TResult>(IStream<TToken> stream)
+        public static IReply<TToken, TResult> Failure<TToken, TResult>(IStream<TToken> stream, IList<ErrorMessage> messages = null)
         {
-            return new Reply<TToken, TResult>.Failure(stream);
+            return new Reply<TToken, TResult>.Failure(stream, messages);
         }
 
-        public static IReply<TToken, TResult> Error<TToken, TResult>(IStream<TToken> stream, ErrorMessage error)
+        public static IReply<TToken, TResult> Error<TToken, TResult>(IStream<TToken> stream, ErrorMessage error, IList<ErrorMessage> messages = null)
         {
-            return new Reply<TToken, TResult>.Error(stream, error);
+            return new Reply<TToken, TResult>.Error(stream, error, messages);
         }
     }
 }
